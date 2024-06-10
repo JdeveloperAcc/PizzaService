@@ -1,9 +1,11 @@
-Řešení úlohy pro "Agregátor objednávek"
+Řešení úlohy pro
 Agregátor objednávek
+
 Navrhněte webovou službu, která:
 
 Je napsaná v aktuální verzi .NET.
 Nabízí RESP API endpoint pro přijetí jedné nebo více objednávek ve formátu:
+
 [
   {
     "productId": "456",
@@ -14,6 +16,7 @@ Nabízí RESP API endpoint pro přijetí jedné nebo více objednávek ve formá
     "quantity": 42
   }
 ]
+
 Objednávky se pro další zpracování agregují - sčítají se počty kusů dle Id produktu.
 Agregované objednávky se ne častěji, než jednou za 20 vteřin, odešlou internímu systému - pro naše účely lze pouze naznačit a vypisovat JSON do konzole.
 Služba by měla počítat s možností velkého množství malých objednávek (stovky za vteřinu) pro relativně limitovaný počet Id produktů (stovky celkem).
