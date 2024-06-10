@@ -1,0 +1,53 @@
+﻿@PizzaService_HostAddress = https://localhost:44317
+
+GET {{PizzaService_HostAddress}}/orders
+
+###
+
+GET {{PizzaService_HostAddress}}/orders/5
+
+###
+
+GET {{PizzaService_HostAddress}}/orders/product/289
+
+###
+
+POST {{PizzaService_HostAddress}}/submit
+Content-Type: application/json
+[
+  {
+    "productId": "456",
+    "quantity": 5
+  },
+  {
+    "productId": "789",
+    "quantity": 42
+  },
+  {
+    "productId": "1456",
+    "quantity": 5
+  },
+  {
+    "productId": "789",
+    "quantity": 42
+  },
+  {
+    "productId": "289",
+    "quantity": 42
+  },
+  {
+    "productId": "489",
+    "quantity": 5
+  }
+]
+###
+
+POST {{PizzaService_HostAddress}}/submit
+Content-Type: application/json
+[
+  {
+    "productId": "656",
+    "quantity": 5
+  }
+]
+###
