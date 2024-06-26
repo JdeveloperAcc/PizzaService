@@ -8,8 +8,7 @@ namespace PizzaService.Tests
     {
         public const string SchemaName = "TestedOrderList";
 
-        // Context is treated as a singleton
-        private static DbContext? Context = null;
+        private DbContext? Context = null;
 
         public class OrderSameParameters : EqualityComparer<Order>
         {
@@ -40,26 +39,26 @@ namespace PizzaService.Tests
 
         public MemoryStoreTest()
         {
-            MemoryStoreTest.MemoryStoreInit(SchemaName);
+            MemoryStoreInit(SchemaName);
         }
 
-        public static void MemoryStoreInit(string schemaName)
+        public void MemoryStoreInit(string schemaName)
         {
             var contextOptions = new DbContextOptionsBuilder<TodoDb>()
                 .UseInMemoryDatabase(schemaName)
                 .Options;
-            MemoryStoreTest.Context = new TodoDb(contextOptions);
+            this.Context = new TodoDb(contextOptions);
         }
 
-        public static DbContext ProvideContext()
+        public DbContext ProvideContext()
         {
-            return MemoryStoreTest.Context ?? throw new NullReferenceException();
+            return this.Context ?? throw new NullReferenceException();
         }
 
         [TestMethod]
         public async Task TestSimple()
         {
-            var storeIO = new Adapter<DbContext>(MemoryStoreTest.ProvideContext()).GetStorageIO<TodoDb>();
+            var storeIO = new Adapter<DbContext>(ProvideContext()).GetStorageIO<TodoDb>();
 
             // test case 1
             int expected1 = 0;
@@ -241,7 +240,7 @@ namespace PizzaService.Tests
         public async Task TestRegular()
         {
             // Adapter Operations:
-            Agregator processingQueue = new Agregator(MemoryStoreTest.ProvideContext());
+            Agregator processingQueue = new Agregator(ProvideContext());
 
             // test case 1
             int exptected1 = 1;
@@ -457,7 +456,7 @@ namespace PizzaService.Tests
         public void TestTwoConcurrentThreadOnOneContextFault()
         {
             // test case 1
-            TodoDb storeIO = new Adapter<DbContext>(MemoryStoreTest.ProvideContext()).GetStorageIO<TodoDb>();
+            TodoDb storeIO = new Adapter<DbContext>(ProvideContext()).GetStorageIO<TodoDb>();
             try
             {
                 Thread thread1 = new Thread(() => QueryDataFromMemory(storeIO, 100));
@@ -486,10 +485,8 @@ namespace PizzaService.Tests
             catch (InvalidOperationException ex)
             {
                 /* learn.microsoft.com "DbContext Lifetime, Configuration, and Initialization"
-                 An attempt was made to use the context instance while it is being configured. 
-                 A DbContext instance cannot be used inside 'OnConfiguring' since it is still being configured at this point. 
-                 This can happen if a second operation is started on this context instance before a previous operation completed. 
-                 Any instance members are not guaranteed to be thread safe.
+				DbContext is not thread-safe. Do not share contexts between threads. 
+				Make sure to await all async calls before continuing to use the context instance.
                  */
                 Assert.AreEqual<string>("InvalidOperationException", ex.GetType().Name);
             }
@@ -500,10 +497,10 @@ namespace PizzaService.Tests
         }
 
         [TestMethod]
-        public async Task TestDisposeSingletonFault()
+        public async Task TestDisposedDbContextDuringScopeFault()
         {
             // test case 1
-            TodoDb storeIO = new Adapter<DbContext>(MemoryStoreTest.ProvideContext()).GetStorageIO<TodoDb>();
+            TodoDb storeIO = new Adapter<DbContext>(ProvideContext()).GetStorageIO<TodoDb>();
             using (TodoDb context = storeIO)
             {
                 var listed = await context.Todos.ToListAsync<Order>();
@@ -515,7 +512,7 @@ namespace PizzaService.Tests
             try
             {
                 int expectedCnt2 = 0;
-                storeIO = new Adapter<DbContext>(MemoryStoreTest.ProvideContext()).GetStorageIO<TodoDb>();
+                storeIO = new Adapter<DbContext>(ProvideContext()).GetStorageIO<TodoDb>();
                 var emptyListed = await storeIO.Todos.ToListAsync<Order>();
                 Assert.AreEqual<int>(expectedCnt2, emptyListed.Count);
             }
@@ -530,14 +527,14 @@ namespace PizzaService.Tests
             finally
             {
                 // clean up
-                MemoryStoreTest.Context = null;
+                Context = null;
             }
         }
 
         //[TestMethod]
         public async Task TestDbSetPrimaryKeyIdentityOverflowFault()
         {
-            TodoDb storeIO = new Adapter<DbContext>(MemoryStoreTest.ProvideContext()).GetStorageIO<TodoDb>();
+            TodoDb storeIO = new Adapter<DbContext>(ProvideContext()).GetStorageIO<TodoDb>();
 
             // test case 1
             Order od = new Order()
